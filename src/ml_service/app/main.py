@@ -61,13 +61,14 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    from .api.routes import feedback, health, investigate, model, predict
+    from .api.routes import events, feedback, health, investigate, model, predict
 
     app.include_router(health.router, tags=["health"])
     app.include_router(predict.router, prefix="/api/v1", tags=["predict"])
     app.include_router(investigate.router, prefix="/api/v1", tags=["investigate"])
     app.include_router(model.router, prefix="/api/v1", tags=["model"])
     app.include_router(feedback.router, prefix="/api/v1", tags=["feedback"])
+    app.include_router(events.router, prefix="/api/v1", tags=["events"])
 
     @app.get("/metrics")
     async def metrics() -> Response:

@@ -43,6 +43,9 @@ dbt = [
 airflow = [
     "apache-airflow==2.10.4",
 ]
+kafka = [
+    "aiokafka==0.12.0",
+]
 dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=0.25.0",
@@ -53,7 +56,7 @@ dev = [
     "httpx>=0.28.1",
     "pip-audit>=2.10.0",
 ]
-all = ["ml-service[dbt,airflow,dev]"]
+all = ["ml-service[dbt,airflow,kafka,dev]"]
 
 [tool.uv]
 override-dependencies = [

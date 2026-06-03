@@ -114,3 +114,23 @@ class InvestigateRequest(BaseModel):
     merchant_id: str | None = None
     device_id: str | None = None
     untrusted_notes: str | None = None
+
+
+class ReviewRequiredEvent(BaseModel):
+    """Payload of a `fraud.review.required` event — a case needing an auto-drafted report.
+
+    Shares the transaction field set with InvestigateRequest; `case_id` is required because
+    the drafted report is attached back to that FraudCase.
+    """
+
+    case_id: str
+    transaction_id: str
+    amount: float = 0.0
+    currency: str = "USD"
+    country: str = "US"
+    new_device: bool = False
+    failed_attempts: int = 0
+    user_id: str | None = None
+    merchant_id: str | None = None
+    device_id: str | None = None
+    untrusted_notes: str | None = None

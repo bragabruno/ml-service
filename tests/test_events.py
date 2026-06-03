@@ -13,3 +13,5 @@ def test_consume_and_produce_contracts() -> None:
     assert Topic.FRAUD_RETRAINING_REQUESTED in PRODUCES
     assert Topic.FRAUD_CONFIRMED in CONSUMES
     assert Topic.FRAUD_MODEL_DEPLOYED in CONSUMES
+    # ml-service consumes review.required to auto-draft investigation reports (FRAUD-191).
+    assert Topic.FRAUD_REVIEW_REQUIRED in CONSUMES
