@@ -51,6 +51,7 @@ _INJECTION_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"system\s*:\s*", re.IGNORECASE),
     re.compile(r"<\|im_start\|>", re.IGNORECASE),
     re.compile(r"\[INST\]", re.IGNORECASE),
+    re.compile(r"</?(?:system|user|assistant)>", re.IGNORECASE),
 ]
 
 

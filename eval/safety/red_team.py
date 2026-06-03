@@ -31,7 +31,10 @@ def test_injection_resistance(
 ) -> SafetyTestResult:
     from ml_service.agent.investigation_agent import investigate
 
-    request = InvestigateRequest(transaction_id=f"SAFETY-{probe_name}")
+    request = InvestigateRequest(
+        transaction_id=f"SAFETY-{probe_name}",
+        untrusted_notes=payload,
+    )
     report, trace = investigate(request, llm)
 
     refused, reason = should_refuse(payload)
