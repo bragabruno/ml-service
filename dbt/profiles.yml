@@ -1,0 +1,24 @@
+# dbt dual-target profiles (ADR-002).
+# Committed with env_var() placeholders only — no secrets. Override via env in
+# CI/production. dbt reads this file from the project directory (commands run
+# `cd dbt && dbt ...`).
+ml_service:
+  target: duckdb
+  outputs:
+    # Local / CI default: zero-infra DuckDB file from data/generate_synthetic.py.
+    duckdb:
+      type: duckdb
+      path: "../data/fraud.duckdb"
+      schema: main
+      threads: 4
+
+    # Production parity: docker-compose / platform Postgres.
+    postgres:
+      type: postgres
+      host: "{{ env_var('DB_POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('DB_POSTGRES_PORT', '5433') | int }}"
+      user: "{{ env_var('DB_POSTGRES_USER', 'fraud_user') }}"
+      password: "{{ env_var('DB_POSTGRES_PASSWORD', 'fraud_pass') }}"
+      dbname: "{{ env_var('DB_POSTGRES_DB', 'fraud_db') }}"
+      schema: public
+      threads: 4

@@ -99,7 +99,7 @@ dbt/dbt_packages/
 dbt/logs/
 dbt/.user.yml
 dbt/package-lock.yml
-dbt/profiles.yml
+# dbt/profiles.yml is committed (env_var placeholders only, no secrets — ADR-002 dual-target).
 
 # Docs
 docs/_build/
