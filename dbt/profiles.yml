@@ -10,7 +10,9 @@ ml_service:
       type: duckdb
       path: "../data/fraud.duckdb"
       schema: main
-      threads: 4
+      # Single-threaded: dbt-duckdb can SIGABRT under concurrent model runs in CI
+      # (PyEval_SaveThread / GIL released). The mart is tiny, so 1 thread is fine.
+      threads: 1
 
     # Production parity: docker-compose / platform Postgres.
     postgres:
