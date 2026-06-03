@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: "Staged users table"
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: username
+        tests: [unique, not_null]
+
+  - name: stg_transactions
+    description: "Staged transactions table"
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: user_id
+        tests: [not_null]
+      - name: amount
+        tests: [not_null]
+      - name: created_at
+        tests: [not_null]
+
+  - name: stg_devices
+    description: "Staged devices table"
+    columns:
+      - name: device_id
+        tests: [unique, not_null]
+
+  - name: stg_merchants
+    description: "Staged merchants table"
+    columns:
+      - name: merchant_id
+        tests: [unique, not_null]
+
+  - name: stg_risk_scores
+    description: "Staged risk scores table"
+    columns:
+      - name: risk_score_id
+        tests: [unique, not_null]
+      - name: transaction_id
+        tests: [not_null]
+
+  - name: stg_fraud_cases
+    description: "Staged fraud cases table"
+    columns:
+      - name: case_id
+        tests: [unique, not_null]
+
+  - name: stg_fraud_labels
+    description: "Staged fraud labels (append-only)"
+    columns:
+      - name: label_id
+        tests: [unique, not_null]
+      - name: transaction_id
+        tests: [not_null]
+      - name: label
+        tests:
+          - accepted_values:
+              values: ["FRAUD", "LEGITIMATE"]
+
+  - name: stg_model_versions
+    description: "Staged model versions table"
+    columns:
+      - name: model_version_id
+        tests: [unique, not_null]
+      - name: version
+        tests: [unique, not_null]
+
+  - name: stg_audit_events
+    description: "Staged audit events (append-only)"
+    columns:
+      - name: audit_event_id
+        tests: [unique, not_null]

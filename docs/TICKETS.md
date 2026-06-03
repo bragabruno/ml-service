@@ -4,7 +4,7 @@
 **Package root:** `com.bragdev.frauddetection` (platform) · `ml_service` (Python)
 **Owner:** BragDev LLC
 
-> **This backlog *continues* the platform backlog in `../docs/TICKETS.md`** (which ends at
+> **This backlog *continues* the platform backlog in `../../docs/TICKETS.md`** (which ends at
 > **FRAUD-161 / EPIC-23**). The AI/ML plane introduced here starts at **EPIC-24 / FRAUD-162**
 > so it imports into the **same Linear workspace** with no id collisions. It does **not**
 > duplicate the already-specified ML tickets (EPIC-09–13 FastAPI/training/lifecycle/
@@ -480,19 +480,20 @@ Make the whole plane defensible (gated CI), legible (docs/diagrams), and present
 
 # Importing into Linear
 
-Same mapping as `../docs/TICKETS.md` §19 — these tickets are formatted identically:
+Same mapping as `../../docs/TICKETS.md` §19 — these tickets are formatted identically:
 
-- **Phase 9** → Linear **Initiative** (or a `phase:9` label).
-- **Epic (EPIC-24…30)** → Linear **Project** (one per epic).
-- **Ticket (FRAUD-162…207)** → Linear **Issue** in its epic's project.
+- **Phase 9** → `phase:9` label (the platform uses `phase:1…8`).
+- **Epic (EPIC-24…30)** → a project **milestone** *and* an `Epic`-labelled **parent issue** inside the existing **"Fraud Detection"** project (mirrors how EPIC-01…23 are modeled — not a separate project per epic).
+- **Ticket (FRAUD-162…207)** → a **sub-issue** of its epic's parent issue, assigned to that epic's milestone.
 
-**Field mapping**
+**Field mapping** (matches the live BragDev workspace taxonomy)
 - Title → the `FRAUD-### — Title` line (keep the id).
 - Description / Business Value / Acceptance Criteria / Technical Notes → issue description (paste as-is; already Markdown).
 - Complexity → **Estimate** points: `XS=1, S=2, M=3, L=5, XL=8`.
-- Type → `type:*` label (`Story`, `Technical Task`, `Infrastructure`, `Spike`, `Feature`).
-- Suggested labels: `domain:ml-service`, plus one of `area:dbt | area:airflow | area:llm | area:agent | area:eval | area:devex`.
-- `Dependencies` → add as **"blocked by"** relations after import (CSV import does **not** create relations).
+- Type → Story→`type:story`, Technical Task→`type:tech-task`, Infrastructure→`type:infra`, Spike→`type:spike`.
+- Domain → `domain:ml-service` on every ticket, plus the epic's area: `area:dbt` (E25), `area:airflow` (E26), `area:llm` (E27), `area:agent` (E28), `area:eval` (E29); E24/E30 use `domain:infra`.
+- Team → `team:ml` (ML/DE/Prompt/Safety), `team:devops` (DO/MLOps), `team:backend` (BE).
+- `Dependencies` → add as **"blocked by"** relations (bulk/CSV import does **not** create relations).
 
 **CSV note:** import issues first (with labels + estimates + project), then add the "blocked by"
 relations from each ticket's `Dependencies` via the UI or Linear API. Cross-repo dependencies

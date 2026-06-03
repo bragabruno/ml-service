@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -37,10 +36,11 @@ class InvestigationReport(BaseModel):
     summary: str
     evidence: list[Evidence]
     reason_codes: list[str]
-    trace_id: Optional[str] = None
-    model: Optional[str] = None
-    tokens_used: Optional[int] = None
-    latency_ms: Optional[float] = None
+    trace_id: str | None = None
+    model: str | None = None
+    tokens_used: int | None = None
+    latency_ms: float | None = None
+    safety_flags: list[str] = Field(default_factory=list)
 
 
 class Explanation(BaseModel):
@@ -65,9 +65,9 @@ class PredictRequest(BaseModel):
     new_device: bool = False
     failed_attempts: int = 0
     country: str = "US"
-    merchant_id: Optional[str] = None
-    device_id: Optional[str] = None
-    user_id: Optional[str] = None
+    merchant_id: str | None = None
+    device_id: str | None = None
+    user_id: str | None = None
 
 
 class PredictResponse(BaseModel):
@@ -80,4 +80,13 @@ class PredictResponse(BaseModel):
 
 class InvestigateRequest(BaseModel):
     transaction_id: str
-    case_id: Optional[str] = None
+    case_id: str | None = None
+    amount: float = 0.0
+    currency: str = "USD"
+    country: str = "US"
+    new_device: bool = False
+    failed_attempts: int = 0
+    user_id: str | None = None
+    merchant_id: str | None = None
+    device_id: str | None = None
+    untrusted_notes: str | None = None

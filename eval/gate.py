@@ -54,7 +54,11 @@ def check_gate(
         )
 
     if baselines:
+        # Only quality metrics are regression-checked. Latency is "lower is better",
+        # so a decrease is an improvement, not a regression.
         for metric, baseline_value in baselines.items():
+            if metric.endswith("_ms"):
+                continue
             current_value = agg.get(metric)
             if current_value is not None and current_value < baseline_value * 0.9:
                 failures.append(

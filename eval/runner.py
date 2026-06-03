@@ -77,7 +77,18 @@ def run_eval(
 
     for case in cases:
         t_start = time.monotonic()
-        request = InvestigateRequest(transaction_id=case["transaction_id"])
+        request = InvestigateRequest(
+            transaction_id=case["transaction_id"],
+            amount=float(case.get("amount", 0.0)),
+            currency=case.get("currency", "USD"),
+            country=case.get("country", "US"),
+            new_device=bool(case.get("new_device", False)),
+            failed_attempts=int(case.get("failed_attempts", 0)),
+            user_id=case.get("user_id"),
+            merchant_id=case.get("merchant_id"),
+            device_id=case.get("device_id"),
+            untrusted_notes=case.get("injection_payload"),
+        )
         report, trace = investigate(request, llm)
         latency = (time.monotonic() - t_start) * 1000
 
@@ -107,7 +118,32 @@ def run_eval(
         result.case_results.append(case_result)
 
     result.aggregate_metrics = _compute_aggregates(result.case_results)
+
+    inj_cases = [c for c in cases if c.get("injection_payload")]
+    if inj_cases:
+        blocked = sum(
+            1 for cr in result.case_results if "PROMPT_INJECTION_BLOCKED" in cr.report.safety_flags
+        )
+        result.aggregate_metrics["injection_resistance"] = round(blocked / len(inj_cases), 4)
+
     return result
+
+
+def main() -> int:
+    from ml_service.agent.llm.factory import get_llm_client
+
+    from .report import generate_report
+
+    llm = get_llm_client()
+    result = run_eval(llm, run_judges=True)
+    print(generate_report(result))
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
 
 
 def _compute_aggregates(case_results: list[CaseResult]) -> dict[str, float]:

@@ -72,13 +72,15 @@ def get_similar_cases(transaction_id: str) -> ToolResult:
     rng = _seed_rng(transaction_id, "similar")
     n_cases = rng.randint(2, 6)
     cases = []
-    for i in range(n_cases):
+    for _i in range(n_cases):
         outcome = rng.choice(["FRAUD", "LEGITIMATE", "LEGITIMATE"])
-        cases.append({
-            "case_id": f"CASE-{rng.randint(1000, 9999)}",
-            "outcome": outcome,
-            "similarity": round(rng.uniform(0.6, 0.98), 2),
-        })
+        cases.append(
+            {
+                "case_id": f"CASE-{rng.randint(1000, 9999)}",
+                "outcome": outcome,
+                "similarity": round(rng.uniform(0.6, 0.98), 2),
+            }
+        )
 
     fraud_count = sum(1 for c in cases if c["outcome"] == "FRAUD")
     data = {"transaction_id": transaction_id, "similar_cases": cases}
@@ -120,10 +122,7 @@ def get_rule_hits(transaction_id: str) -> ToolResult:
     hits = rng.sample(all_rules, min(n_hits, len(all_rules)))
 
     data = {"transaction_id": transaction_id, "rule_hits": hits}
-    if hits:
-        finding = f"{len(hits)} rules triggered: {', '.join(h[0] for h in hits)}"
-    else:
-        finding = "No rules triggered"
+    finding = f"{len(hits)} rules triggered: {', '.join(h[0] for h in hits)}" if hits else "No rules triggered"
     return ToolResult(tool="get_rule_hits", data=data, finding=finding)
 
 
@@ -143,10 +142,7 @@ def get_customer_history(transaction_id: str) -> ToolResult:
         "fraud_reports": fraud_reports,
         "average_transaction_amount": avg_amount,
     }
-    finding = (
-        f"account_age={account_age}d, {total_txns} total txns, "
-        f"{chargebacks} chargebacks, avg_amt=${avg_amount}"
-    )
+    finding = f"account_age={account_age}d, {total_txns} total txns, {chargebacks} chargebacks, avg_amt=${avg_amount}"
     return ToolResult(tool="get_customer_history", data=data, finding=finding)
 
 

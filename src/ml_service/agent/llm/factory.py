@@ -17,6 +17,7 @@ def get_llm_client() -> LLMClient:
         if not api_key or api_key == "your-anthropic-api-key-here":
             raise ValueError("ANTHROPIC_API_KEY must be set when LLM_PROVIDER=anthropic")
         from .anthropic_client import AnthropicClient
+
         model = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
         return AnthropicClient(api_key=api_key, model=model)
 

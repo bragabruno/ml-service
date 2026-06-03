@@ -1,0 +1,16 @@
+country_code,country_name,risk_score
+US,United States,0.10
+GB,United Kingdom,0.10
+BR,Brazil,0.30
+DE,Germany,0.10
+FR,France,0.10
+NG,Nigeria,0.70
+RU,Russia,0.80
+CN,China,0.50
+IN,India,0.30
+JP,Japan,0.10
+CA,Canada,0.10
+AU,Australia,0.10
+MX,Mexico,0.40
+KR,South Korea,0.20
+ZA,South Africa,0.50

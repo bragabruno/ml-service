@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: fraud_kpis
+    description: "Platform-wide fraud KPIs — single-row summary for dashboards and reporting"
+    columns:
+      - name: total_labels
+        tests: [not_null]
+      - name: fraud_detection_rate
+        description: "Resolved fraud cases / total fraud labels"
+      - name: false_positive_rate
+        description: "Declined legitimate / total legitimate"
+      - name: fraud_loss_amount
+        description: "Total amount of confirmed fraud transactions"

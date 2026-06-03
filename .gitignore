@@ -1,63 +1,125 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+.venv/
+venv/
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg
 *.egg-info/
 dist/
 build/
-*.egg
+eggs/
+sdist/
+wheels/
+*.whl
+.Python
+develop-eggs/
+.installed.cfg
 
-# Virtual environments
-.venv/
-venv/
-env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment & secrets
-.env
-.env.local
-.env.*.local
-
-# Testing & coverage
-.coverage
-htmlcov/
+# Testing
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
-# dbt
-dbt/logs/
-dbt/target/
-dbt/dbt_packages/
+# Linting / Typechecking
+.ruff_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/*.ipynb
+
+# Data
+data/**/*.csv
+data/**/*.parquet
+data/**/*.json
+data/**/*.jsonl
+data/**/*.xlsx
+data/**/*.pkl
+data/**/*.h5
+data/**/*.hdf5
+data/**/*.duckdb
+data/**/*.duckdb.wal
+
+# Model artifacts
+models/**/*.pkl
+models/**/*.joblib
+models/**/*.h5
+models/**/*.pt
+models/**/*.pth
+models/**/*.onnx
+models/**/*.pkl
+models/**/*.model
+models/**/*.bin
+models/**/*.safetensors
+models/**/checkpoint*/
+models/**/runs/
+models/**/wandb/
+models/**/*.zip
 
 # MLflow
 mlruns/
 mlartifacts/
 
+# Weights & Biases
+wandb/
+
+# Docker
+docker-compose.override.yml
+
 # Airflow
 airflow/logs/
-airflow/*.pid
-airflow/*.log
+airflow/plugins/
+airflow/airflow-webserver.pid
+airflow/airflow-webserver-monitor.pid
+airflow/airflow.cfg
+airflow/airflow.db
+airflow/unittests.cfg
 
-# Data
-data/*.db
-data/*.duckdb
-data/*.parquet
-data/*.csv
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+dbt/package-lock.yml
+dbt/profiles.yml
 
-# Notebooks
-.ipynb_checkpoints/
+# Docs
+docs/_build/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Scripts
+scripts/*.log
+scripts/*.pid
+
+# Eval outputs
+eval/results/
+eval/outputs/
+eval/reports/
 
 # Misc
 *.log
+*.pid
+*.tmp

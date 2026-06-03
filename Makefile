@@ -1,38 +1,47 @@
-.PHONY: help install dev test lint typecheck serve train dbt eval demo airflow clean
+.PHONY: help install dev test lint typecheck serve train dbt eval demo airflow generate parity clean
+
+PYTHON = .venv/bin/python
+UV = uv
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install production dependencies
-	uv sync
+	$(UV) sync
 
 dev: ## Install all dependencies (dev + dbt + airflow)
-	uv sync --all-extras
+	$(UV) sync --all-extras
 
 test: ## Run tests + lint + typecheck
-	ruff check src/ tests/
-	ruff format --check src/ tests/
-	mypy src/
-	pytest tests/ -v --tb=short
+	$(UV) run ruff check src/ tests/
+	$(UV) run ruff format --check src/ tests/
+	$(UV) run mypy src/
+	$(UV) run pytest tests/ -v --tb=short
 
 lint: ## Run linters
-	ruff check src/ tests/
-	ruff format --check src/ tests/
+	$(UV) run ruff check src/ tests/
+	$(UV) run ruff format --check src/ tests/
 
 typecheck: ## Run mypy
-	mypy src/
+	$(UV) run mypy src/
 
 serve: ## Start the FastAPI server
-	uvicorn ml_service.app.main:app --host 0.0.0.0 --port 8000 --reload
+	$(UV) run uvicorn ml_service.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+generate: ## Generate synthetic data into DuckDB
+	$(PYTHON) data/generate_synthetic.py
+
+parity: ## Run train/serve feature parity check
+	$(UV) run python -m ml_service.features.parity
 
 train: ## Run the training pipeline
-	python -m ml_service.training.train
+	$(UV) run python -m ml_service.training.train
 
-dbt: ## Run dbt build + test (DuckDB target)
-	cd dbt && dbt build --target duckdb && dbt test --target duckdb
+dbt: ## Run dbt seed + build + test (DuckDB target)
+	cd dbt && dbt seed --target duckdb && dbt build --target duckdb && dbt test --target duckdb
 
 eval: ## Run the AI evaluation suite
-	python -m eval.runner
+	$(UV) run python -m eval.runner
 
 demo: ## Run the full end-to-end demo
 	bash scripts/demo.sh

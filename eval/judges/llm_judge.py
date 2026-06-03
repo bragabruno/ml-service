@@ -25,8 +25,8 @@ def judge_groundedness(
     llm: LLMClient,
 ) -> JudgeVerdict:
     rendered = load_prompt(
-        "judges/groundedness",
-        "v1",
+        "judges",
+        "groundedness",
         report=report.model_dump(),
         evidence=[e.model_dump() for e in report.evidence],
     )
@@ -48,8 +48,8 @@ def judge_hallucination(
     llm: LLMClient,
 ) -> JudgeVerdict:
     rendered = load_prompt(
-        "judges/hallucination",
-        "v1",
+        "judges",
+        "hallucination",
         report=report.model_dump(),
         evidence=[e.model_dump() for e in report.evidence],
     )
@@ -72,8 +72,8 @@ def judge_disposition(
     expected_disposition: str | None = None,
 ) -> JudgeVerdict:
     rendered = load_prompt(
-        "judges/disposition",
-        "v1",
+        "judges",
+        "disposition",
         report=report.model_dump(),
         evidence=[e.model_dump() for e in report.evidence],
         expected_disposition=expected_disposition or "Not provided",

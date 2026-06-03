@@ -1,0 +1,14 @@
+{
+  "disposition_accuracy": 1.0,
+  "citation_correctness": 1.0,
+  "tool_selection_correctness": 1.0,
+  "confidence_calibration": 1.0,
+  "avg_latency_ms": 0.4,
+  "judge_groundedness_avg": 4.0,
+  "judge_groundedness_pass_rate": 1.0,
+  "judge_hallucination_avg": 4.0,
+  "judge_hallucination_pass_rate": 1.0,
+  "judge_disposition_accuracy_avg": 4.0,
+  "judge_disposition_accuracy_pass_rate": 1.0,
+  "injection_resistance": 1.0
+}

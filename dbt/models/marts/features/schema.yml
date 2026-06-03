@@ -1,0 +1,85 @@
+version: 2
+
+models:
+  - name: fct_transaction_features
+    description: "Per-transaction feature mart — single row per transaction with all ML features. Must match features/contract.py exactly (parity test)."
+    columns:
+      - name: transaction_id
+        description: "UUID of the transaction"
+        tests: [unique, not_null]
+      - name: amount
+        description: "Transaction amount in base currency"
+        tests: [not_null]
+      - name: amount_log
+        description: "log1p(amount)"
+      - name: amount_usd
+        description: "Amount converted to USD"
+      - name: txn_hour
+        description: "Hour of day (0-23) UTC"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+      - name: txn_day_of_week
+        description: "Day of week (0=Sun, 6=Sat)"
+      - name: is_weekend
+        description: "Transaction on Sat/Sun"
+      - name: is_night
+        description: "Transaction between 00:00-05:00 UTC"
+      - name: velocity_5m
+        description: "Txn count for same user in last 5 minutes"
+      - name: velocity_1h
+        description: "Txn count for same user in last 1 hour"
+      - name: velocity_24h
+        description: "Txn count for same user in last 24 hours"
+      - name: amount_5m
+        description: "Sum of amounts for same user in last 5 minutes"
+      - name: amount_1h
+        description: "Sum of amounts for same user in last 1 hour"
+      - name: amount_24h
+        description: "Sum of amounts for same user in last 24 hours"
+      - name: user_account_age_days
+        description: "Days since user account creation"
+      - name: user_txn_count_30d
+        description: "User total txn count in last 30 days"
+      - name: user_failed_attempts_24h
+        description: "Failed txn attempts for user in last 24h"
+      - name: device_age_days
+        description: "Days since device first_seen"
+      - name: device_is_trusted
+        description: "Device marked as trusted"
+      - name: device_is_new
+        description: "Device first_seen within last 7 days"
+      - name: device_txn_count_24h
+        description: "Txn count from this device in last 24h"
+      - name: merchant_risk_score
+        description: "Merchant risk tier as numeric (LOW=0.1, MED=0.5, HIGH=0.9)"
+      - name: merchant_txn_volume_24h
+        description: "Merchant txn volume in last 24h"
+      - name: merchant_fraud_rate_30d
+        description: "Merchant fraud rate in last 30 days"
+      - name: country_risk
+        description: "Country risk score (0-1)"
+      - name: is_foreign_country
+        description: "Txn country differs from user home country"
+      - name: ip_country_mismatch
+        description: "IP geolocation differs from declared country"
+      - name: mcc_risk
+        description: "MCC category risk score (0-1)"
+      - name: days_since_last_txn
+        description: "Days since user's previous transaction"
+      - name: avg_amount_30d
+        description: "User average txn amount in last 30 days"
+      - name: amount_to_avg_ratio
+        description: "Current amount / user 30d average"
+      - name: distinct_merchants_24h
+        description: "Distinct merchants for user in last 24h"
+      - name: distinct_countries_24h
+        description: "Distinct countries for user in last 24h"
+      - name: chargeback_count_90d
+        description: "User chargeback count in last 90 days"
+      - name: has_chargeback_history
+        description: "User has any prior chargebacks"
+      - name: created_at
+        description: "Transaction timestamp"
+        tests: [not_null]

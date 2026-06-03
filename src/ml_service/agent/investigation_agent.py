@@ -4,8 +4,9 @@ import json
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
+from ml_service.agent.guardrails import check_prompt_injection, redact_pii
 from ml_service.agent.llm.base import LLMClient, LLMMessage
 from ml_service.agent.tools import TOOL_REGISTRY, ToolResult
 from ml_service.schemas.investigation import (
@@ -35,14 +36,14 @@ class AgentTrace:
 def _parse_json_response(content: str) -> dict[str, Any]:
     json_match = re.search(r"```json\s*(.*?)\s*```", content, re.DOTALL)
     if json_match:
-        return json.loads(json_match.group(1))
+        return cast("dict[str, Any]", json.loads(json_match.group(1)))
     try:
-        return json.loads(content)
+        return cast("dict[str, Any]", json.loads(content))
     except json.JSONDecodeError:
         brace_start = content.find("{")
         brace_end = content.rfind("}") + 1
         if brace_start >= 0 and brace_end > brace_start:
-            return json.loads(content[brace_start:brace_end])
+            return cast("dict[str, Any]", json.loads(content[brace_start:brace_end]))
         raise
 
 
@@ -54,6 +55,16 @@ def investigate(
 ) -> tuple[InvestigationReport, AgentTrace]:
     t_start = time.monotonic()
     trace = AgentTrace(transaction_id=request.transaction_id)
+
+    # Guardrails: any upstream free-text (e.g. analyst notes / case data) is UNTRUSTED.
+    # Screen it for prompt-injection and PII and NEVER forward it to the LLM, so
+    # adversarial input cannot steer the disposition (see eval/safety/red_team.py).
+    safety_flags: list[str] = []
+    if request.untrusted_notes:
+        if check_prompt_injection(request.untrusted_notes).detected:
+            safety_flags.append("PROMPT_INJECTION_BLOCKED")
+        if redact_pii(request.untrusted_notes).redaction_count > 0:
+            safety_flags.append("PII_REDACTED")
 
     tools_to_call = [
         "get_transaction_features",
@@ -80,22 +91,26 @@ def investigate(
         "investigation",
         "v1",
         transaction_id=request.transaction_id,
-        amount="unknown",
-        currency="USD",
-        country="unknown",
-        device_id="unknown",
-        new_device="unknown",
-        user_id="unknown",
-        merchant_id="unknown",
-        timestamp="unknown",
+        amount=request.amount,
+        currency=request.currency,
+        country=request.country,
+        device_id=request.device_id or "n/a",
+        new_device=str(request.new_device).lower(),
+        user_id=request.user_id or "n/a",
+        merchant_id=request.merchant_id or "n/a",
+        timestamp="n/a",
     )
 
     evidence_text = "\n".join(f"- **{r.tool}**: {r.finding}" for r in tool_results)
-    user_content = f"{rendered.user}\n\n## Tool Results\n\n{evidence_text}"
+    case_signals = (
+        f"CASE_SIGNALS amount={request.amount} country={request.country} "
+        f"new_device={str(request.new_device).lower()} failed_attempts={request.failed_attempts}"
+    )
+    user_content = f"{rendered.user}\n\n{case_signals}\n\n## Tool Results\n\n{evidence_text}"
 
     messages = [LLMMessage(role="user", content=user_content)]
 
-    t_llm = time.monotonic()
+    time.monotonic()
     response = llm.complete(
         messages,
         system=rendered.system,
@@ -118,8 +133,7 @@ def investigate(
         }
 
     evidence_list = [
-        Evidence(tool=e.get("tool", "unknown"), finding=e.get("finding", ""))
-        for e in parsed.get("evidence", [])
+        Evidence(tool=e.get("tool", "unknown"), finding=e.get("finding", "")) for e in parsed.get("evidence", [])
     ]
 
     disposition_str = parsed.get("disposition", "REVIEW")
@@ -128,17 +142,22 @@ def investigate(
     except ValueError:
         disposition = Decision.REVIEW
 
+    reason_codes = list(parsed.get("reason_codes", []))
+    if "PROMPT_INJECTION_BLOCKED" in safety_flags and "PROMPT_INJECTION_BLOCKED" not in reason_codes:
+        reason_codes.append("PROMPT_INJECTION_BLOCKED")
+
     report = InvestigationReport(
         transaction_id=request.transaction_id,
         disposition=disposition,
         confidence=float(parsed.get("confidence", 0.5)),
         summary=parsed.get("summary", ""),
         evidence=evidence_list,
-        reason_codes=parsed.get("reason_codes", []),
+        reason_codes=reason_codes,
         trace_id=parsed.get("trace_id"),
         model=response.model,
         tokens_used=trace.total_tokens,
         latency_ms=trace.total_latency_ms,
+        safety_flags=safety_flags,
     )
 
     return report, trace

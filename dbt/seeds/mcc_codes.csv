@@ -1,0 +1,11 @@
+mcc_code,mcc_description,risk_score
+5411,Grocery Stores,0.10
+5812,Eating Places and Restaurants,0.15
+5912,Drug Stores and Pharmacies,0.20
+7011,Hotels and Motels,0.20
+5541,Service Stations,0.25
+5691,Clothing Stores,0.30
+5944,Jewelry Stores,0.40
+7995,Gambling and Betting,0.80
+6011,Financial Institutions - Cash,0.70
+4111,Transportation Services,0.10

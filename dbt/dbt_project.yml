@@ -1,0 +1,24 @@
+name: "ml_service"
+version: "1.0.0"
+config-version: 2
+
+profile: "ml_service"
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+vars:
+  ml_service:
+    fraud_rate_threshold: 0.05
+    sample_weight_missed_fraud: 5.0
+    velocity_windows_minutes: [5, 60, 1440]
+    training_lookback_days: 90

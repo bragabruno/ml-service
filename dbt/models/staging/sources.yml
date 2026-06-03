@@ -1,0 +1,103 @@
+version: 2
+
+sources:
+  - name: fraud_platform
+    description: "Raw domain tables from the Fraud Prevention Platform"
+    schema: "{{ target.schema }}"
+    freshness:
+      warn_after: { count: 24, period: hour }
+      error_after: { count: 72, period: hour }
+    loaded_at_field: created_at
+
+    tables:
+      - name: users
+        description: "Platform users (analysts, admins, system accounts)"
+        columns:
+          - name: id
+            description: "UUIDv7 primary key"
+            tests: [unique, not_null]
+          - name: username
+            tests: [unique, not_null]
+          - name: email
+            tests: [unique, not_null]
+          - name: created_at
+            tests: [not_null]
+
+      - name: transactions
+        description: "Payment transactions scored by the fraud engine"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: user_id
+            tests: [not_null]
+          - name: merchant_id
+            tests: [not_null]
+          - name: device_id
+            tests: [not_null]
+          - name: amount
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  min_value: 0
+          - name: created_at
+            tests: [not_null]
+
+      - name: devices
+        description: "Device fingerprints linked to transactions"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: fingerprint
+            tests: [unique, not_null]
+
+      - name: merchants
+        description: "Merchants receiving transactions"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: name
+            tests: [not_null]
+
+      - name: risk_scores
+        description: "ML + rules scores produced per transaction"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: transaction_id
+            tests: [not_null]
+          - name: model_version_id
+            tests: [not_null]
+
+      - name: fraud_cases
+        description: "Review cases opened for flagged transactions"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: transaction_id
+            tests: [not_null]
+
+      - name: fraud_labels
+        description: "Ground-truth labels (append-only, superseded by new rows)"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: transaction_id
+            tests: [not_null]
+          - name: label
+            tests:
+              - accepted_values:
+                  values: ["FRAUD", "LEGITIMATE"]
+
+      - name: model_versions
+        description: "Registered ML model versions"
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: version
+            tests: [unique, not_null]
+
+      - name: audit_events
+        description: "Append-only audit trail"
+        columns:
+          - name: id
+            tests: [unique, not_null]

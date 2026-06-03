@@ -58,7 +58,7 @@ flowchart TB
 | **Prompt Engineering** | `prompts/` versioned registry + `agent/` + `explain/narrator.py` | Explainability (FRAUD-084/156) |
 | **dbt** + **SQL** | `dbt/` — staging → feature mart → training mart → KPI marts | Feature parity (FRAUD-068) |
 | **Airflow** | `airflow/dags/` — ETL, training, drift, eval DAGs | EPIC-11/12/18 orchestration |
-| **Machine Learning** + **Data Science** | `src/ml_service/training/`, `drift/`, `notebooks/` | EPIC-10/11/18 |
+| **Machine Learning** + **Data Science** | `src/ml_service/training/`, `drift/`, `explain/` | EPIC-10/11/18 |
 | **Python** | entire service | EPIC-09 |
 | **GitHub / CI/CD** | `.github/workflows/ci.yml` with eval-gate | EPIC-22 |
 
@@ -114,8 +114,7 @@ ml-service/
 ├── data/                 # Synthetic data generator
 ├── scripts/              # demo.sh
 ├── tests/                # pytest
-├── notebooks/            # EDA + model card
-└── docs/                 # ARCHITECTURE.md, EVALUATION.md, ADRs, diagrams
+└── docs/                 # ARCHITECTURE.md, EVALUATION.md, PROMPTS.md, MODEL_CARD.md, ADRs
 ```
 
 ---

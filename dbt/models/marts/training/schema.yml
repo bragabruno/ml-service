@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: training_dataset
+    description: "Point-in-time training dataset with labels and sample weights. Inner join ensures only labeled transactions are included."
+    columns:
+      - name: transaction_id
+        description: "UUID of the transaction"
+        tests: [unique, not_null]
+      - name: is_fraud
+        description: "Binary label (1=FRAUD, 0=LEGITIMATE)"
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: label_type
+        description: "Original label string"
+        tests:
+          - accepted_values:
+              values: ["FRAUD", "LEGITIMATE"]
+      - name: sample_weight
+        description: "Sample weight (5.0 for missed fraud, 1.0 otherwise)"
+      - name: created_at
+        tests: [not_null]

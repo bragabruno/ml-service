@@ -8,7 +8,8 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-_PROMPTS_DIR = Path(__file__).parent.parent.parent.parent / "prompts"
+# registry.py lives inside the prompts/ package, so the templates are siblings.
+_PROMPTS_DIR = Path(__file__).parent
 
 
 @dataclass(frozen=True)

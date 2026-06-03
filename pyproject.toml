@@ -3,7 +3,7 @@ name = "ml-service"
 version = "0.1.0"
 description = "AI/ML plane for the Fraud Prevention Platform — inference, training, drift, agentic investigation, and evaluation."
 readme = "README.md"
-license = { text = "Proprietary — BragDev LLC" }
+license = { text = "MIT" }
 requires-python = ">=3.12"
 authors = [{ name = "Bruno Braga", email = "bruno@bragdev.com" }]
 
@@ -27,7 +27,6 @@ dependencies = [
     "duckdb==1.1.3",
     "redis==5.2.1",
     "psycopg2-binary==2.9.10",
-    "sqlalchemy==2.0.36",
 ]
 
 [project.optional-dependencies]
@@ -64,7 +63,8 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH"]
-ignore = ["E501"]
+# N803/N806: allow conventional ML names (X, X_train) for feature matrices.
+ignore = ["E501", "N803", "N806"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -72,8 +72,14 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# Many ML/data libs (xgboost, shap, mlflow, duckdb, optuna, …) ship no type stubs.
+ignore_missing_imports = true
+# numpy arrays are passed as bare `np.ndarray`; requiring full generic params
+# (NDArray[...]) adds noise without catching real bugs here.
+disallow_any_generics = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = "-v --tb=short --strict-markers"

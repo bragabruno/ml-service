@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 _PII_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("EMAIL", re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")),
     ("PHONE", re.compile(r"\b(?:\+?1[-.]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b")),
@@ -71,6 +70,7 @@ def check_prompt_injection(text: str) -> InjectionCheck:
 
 def validate_output(content: str, required_keys: list[str]) -> tuple[bool, list[str]]:
     import json
+
     try:
         parsed = json.loads(content)
     except json.JSONDecodeError:
