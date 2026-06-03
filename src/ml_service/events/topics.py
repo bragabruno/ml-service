@@ -22,6 +22,7 @@ class Topic(str, Enum):
 
 # What the ml-service consumes from and produces to (see README "Platform Contracts").
 CONSUMES: tuple[Topic, ...] = (
+    Topic.FRAUD_REVIEW_REQUIRED,
     Topic.FRAUD_CONFIRMED,
     Topic.FRAUD_FALSE_POSITIVE,
     Topic.FRAUD_MODEL_DEPLOYED,

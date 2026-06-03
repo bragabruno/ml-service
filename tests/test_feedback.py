@@ -1,10 +1,24 @@
 from __future__ import annotations
 
+from ml_service.app.api.routes.feedback import derive_label
 from ml_service.schemas.investigation import (
     AnalystFeedback,
     Decision,
     FeedbackResponse,
+    LabelType,
 )
+
+
+def test_derive_label_decline_is_fraud() -> None:
+    assert derive_label(Decision.DECLINE) is LabelType.FRAUD
+
+
+def test_derive_label_approve_is_legitimate() -> None:
+    assert derive_label(Decision.APPROVE) is LabelType.LEGITIMATE
+
+
+def test_derive_label_review_is_none() -> None:
+    assert derive_label(Decision.REVIEW) is None
 
 
 def test_feedback_schema_roundtrip() -> None:

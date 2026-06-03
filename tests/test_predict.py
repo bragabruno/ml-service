@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ml_service.agent.investigation_agent import investigate
 from ml_service.agent.llm.mock_client import MockLLM
-from ml_service.app.api.routes.predict import _auto_investigate, _rule_based_predict
+from ml_service.app.api.routes.predict import _auto_investigate, _rule_based_predict, predict
 from ml_service.schemas.investigation import (
     AgentTriage,
     Decision,
@@ -68,6 +68,20 @@ def test_auto_investigate_high_risk_declines() -> None:
     triage = _auto_investigate(req, 0.8)
     assert triage is not None
     assert triage.disposition == Decision.DECLINE
+
+
+async def test_predict_medium_band_routes_to_agent_triage() -> None:
+    # FRAUD-193: uncertain (MEDIUM) predictions get an agent triage note.
+    resp = await predict(_predict_request(amount=6000.0, country="BR", new_device=True, failed_attempts=2))
+    assert resp.risk_level == "MEDIUM"
+    assert resp.agent_triage is not None
+
+
+async def test_predict_low_band_skips_agent_triage() -> None:
+    # FRAUD-193: clear (LOW) predictions skip triage.
+    resp = await predict(_predict_request(amount=50.0, country="US"))
+    assert resp.risk_level == "LOW"
+    assert resp.agent_triage is None
 
 
 def test_investigate_returns_trace() -> None:

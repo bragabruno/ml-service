@@ -22,6 +22,11 @@ class Settings(BaseSettings):
 
     kafka_bootstrap_servers: str = "localhost:9092"
 
+    # Case-management integration (HITL). mock = in-memory/log (default, offline);
+    # http = POST drafted reports/labels to the case-management service.
+    case_mgmt_provider: str = "mock"
+    case_mgmt_url: str = ""
+
     service_host: str = "0.0.0.0"
     service_port: int = 8000
     log_level: str = "INFO"
