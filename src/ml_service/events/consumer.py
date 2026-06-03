@@ -10,7 +10,7 @@ from ml_service.events.topics import Topic
 from ml_service.integrations.case_management import get_case_client
 from ml_service.schemas.investigation import ReviewRequiredEvent
 
-logger = get_logger("review_consumer")
+logger = get_logger("consumer")
 
 
 async def run_review_consumer() -> None:
@@ -45,3 +45,37 @@ async def run_review_consumer() -> None:
     finally:
         await consumer.stop()
         logger.info("review_consumer_stopped")
+
+
+async def run_retraining_consumer() -> None:
+    """Production ingress: consume `fraud.retraining.requested` and orchestrate a retraining run.
+
+    Mirrors `run_review_consumer` — lazy aiokafka, broker only needed in production. Each request
+    runs train→evaluate→register+promotion-check via the shared `run_retraining` orchestrator.
+    """
+    from aiokafka import AIOKafkaConsumer
+
+    from ml_service.retraining.orchestrator import run_retraining
+    from ml_service.schemas.retraining import RetrainingRequestedEvent
+
+    settings = get_settings()
+
+    consumer = AIOKafkaConsumer(
+        Topic.FRAUD_RETRAINING_REQUESTED.value,
+        bootstrap_servers=settings.kafka_bootstrap_servers,
+        group_id="ml-service.retraining-orchestrator",
+        enable_auto_commit=True,
+        value_deserializer=lambda b: json.loads(b.decode("utf-8")),
+    )
+    await consumer.start()
+    logger.info("retraining_consumer_started", topic=Topic.FRAUD_RETRAINING_REQUESTED.value)
+    try:
+        async for message in consumer:
+            try:
+                event = RetrainingRequestedEvent.model_validate(message.value)
+                run_retraining(trigger=event.trigger, reason=event.reason)
+            except Exception as exc:  # noqa: BLE001 - one bad event must not kill the consumer
+                logger.warning("retraining_event_failed", error=str(exc))
+    finally:
+        await consumer.stop()
+        logger.info("retraining_consumer_stopped")
