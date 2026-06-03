@@ -1,0 +1,7 @@
+{
+  "name": "explanation",
+  "version": "v1",
+  "model": "default",
+  "temperature": 0.0,
+  "description": "SHAP/importances to plain-English narrator for fraud analysts."
+}

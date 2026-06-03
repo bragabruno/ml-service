@@ -1,0 +1,7 @@
+{
+  "name": "investigation",
+  "version": "v1",
+  "model": "default",
+  "temperature": 0.0,
+  "description": "Fraud investigation prompt — produces structured disposition reports with cited evidence."
+}
