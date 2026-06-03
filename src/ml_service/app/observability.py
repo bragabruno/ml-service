@@ -55,8 +55,10 @@ def configure_logging(log_level: str = "INFO") -> None:
     )
 
 
-def get_logger(name: str | None = None) -> Any:
-    return structlog.get_logger(name)
+def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+    logger = structlog.get_logger(name)
+    assert isinstance(logger, structlog.stdlib.BoundLogger)
+    return logger
 
 
 class Timer:
