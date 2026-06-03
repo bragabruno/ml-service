@@ -54,6 +54,39 @@ def load_golden_dataset(path: Path | None = None) -> list[dict[str, Any]]:
     return cases
 
 
+def _compute_aggregates(case_results: list[CaseResult]) -> dict[str, float]:
+    if not case_results:
+        return {}
+
+    n = len(case_results)
+
+    disp_correct = sum(cr.deterministic_metrics.get("disposition_correct", 0) for cr in case_results) / n
+    cit_corr = sum(cr.deterministic_metrics.get("citation_correctness", 0) for cr in case_results) / n
+    tool_sel = sum(cr.deterministic_metrics.get("tool_selection", 0) for cr in case_results) / n
+    conf_cal = sum(cr.deterministic_metrics.get("confidence_calibration", 0) for cr in case_results) / n
+    avg_latency = sum(cr.latency_ms for cr in case_results) / n
+
+    agg: dict[str, float] = {
+        "disposition_accuracy": round(disp_correct, 4),
+        "citation_correctness": round(cit_corr, 4),
+        "tool_selection_correctness": round(tool_sel, 4),
+        "confidence_calibration": round(conf_cal, 4),
+        "avg_latency_ms": round(avg_latency, 2),
+    }
+
+    all_verdicts = [v for cr in case_results for v in cr.judge_verdicts]
+    if all_verdicts:
+        for metric_name in ("groundedness", "hallucination", "disposition_accuracy"):
+            metric_verdicts = [v for v in all_verdicts if v.metric == metric_name]
+            if metric_verdicts:
+                avg_score = sum(v.score for v in metric_verdicts) / len(metric_verdicts)
+                pass_rate = sum(1 for v in metric_verdicts if v.passed) / len(metric_verdicts)
+                agg[f"judge_{metric_name}_avg"] = round(avg_score, 2)
+                agg[f"judge_{metric_name}_pass_rate"] = round(pass_rate, 4)
+
+    return agg
+
+
 def run_eval(
     llm: LLMClient,
     *,
@@ -144,36 +177,3 @@ if __name__ == "__main__":
     import sys
 
     sys.exit(main())
-
-
-def _compute_aggregates(case_results: list[CaseResult]) -> dict[str, float]:
-    if not case_results:
-        return {}
-
-    n = len(case_results)
-
-    disp_correct = sum(cr.deterministic_metrics.get("disposition_correct", 0) for cr in case_results) / n
-    cit_corr = sum(cr.deterministic_metrics.get("citation_correctness", 0) for cr in case_results) / n
-    tool_sel = sum(cr.deterministic_metrics.get("tool_selection", 0) for cr in case_results) / n
-    conf_cal = sum(cr.deterministic_metrics.get("confidence_calibration", 0) for cr in case_results) / n
-    avg_latency = sum(cr.latency_ms for cr in case_results) / n
-
-    agg: dict[str, float] = {
-        "disposition_accuracy": round(disp_correct, 4),
-        "citation_correctness": round(cit_corr, 4),
-        "tool_selection_correctness": round(tool_sel, 4),
-        "confidence_calibration": round(conf_cal, 4),
-        "avg_latency_ms": round(avg_latency, 2),
-    }
-
-    all_verdicts = [v for cr in case_results for v in cr.judge_verdicts]
-    if all_verdicts:
-        for metric_name in ("groundedness", "hallucination", "disposition_accuracy"):
-            metric_verdicts = [v for v in all_verdicts if v.metric == metric_name]
-            if metric_verdicts:
-                avg_score = sum(v.score for v in metric_verdicts) / len(metric_verdicts)
-                pass_rate = sum(1 for v in metric_verdicts if v.passed) / len(metric_verdicts)
-                agg[f"judge_{metric_name}_avg"] = round(avg_score, 2)
-                agg[f"judge_{metric_name}_pass_rate"] = round(pass_rate, 4)
-
-    return agg

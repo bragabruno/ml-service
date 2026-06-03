@@ -46,7 +46,7 @@ train: ## Run the training pipeline
 	$(RUN) $(UV) run python -m ml_service.training.train
 
 dbt: ## Run dbt seed + build + test (DuckDB target)
-	cd dbt && $(RUN) dbt seed --target duckdb && $(RUN) dbt build --target duckdb && $(RUN) dbt test --target duckdb
+	cd dbt && $(UV) run dbt seed --target duckdb && $(UV) run dbt build --target duckdb && $(UV) run dbt test --target duckdb
 
 eval: ## Run the AI evaluation suite
 	$(RUN) $(UV) run python -m eval.runner
