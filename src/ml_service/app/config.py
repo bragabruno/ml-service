@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     case_mgmt_provider: str = "mock"
     case_mgmt_url: str = ""
 
+    # Retraining-event producer. mock = in-memory/log (default, offline); kafka = publish to broker.
+    event_producer_provider: str = "mock"
+    retraining_audit_path: str = "./data/retraining_audit.jsonl"
+    retraining_debounce_hours: float = 24.0
+
     service_host: str = "0.0.0.0"
     service_port: int = 8000
     log_level: str = "INFO"

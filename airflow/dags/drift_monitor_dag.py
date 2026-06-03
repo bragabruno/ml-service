@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 
 default_args = {
@@ -33,6 +32,35 @@ def check_drift(**kwargs):
     return evaluate_drift(reference, current, list(numeric.columns))
 
 
+def request_retraining_on_drift(**kwargs):
+    """Emit `fraud.retraining.requested` (debounced + audited) when drift was detected."""
+    from datetime import timedelta
+
+    from ml_service.app.config import get_settings
+    from ml_service.events.producer import get_event_producer
+    from ml_service.retraining.audit import RetrainingAuditLedger
+    from ml_service.retraining.triggers import (
+        TriggerType,
+        drift_triggers_retraining,
+        request_retraining,
+    )
+
+    drift_result = kwargs["ti"].xcom_pull(task_ids="compute_drift")
+    if not drift_triggers_retraining(drift_result):
+        return {"emitted": False, "suppressed_reason": "no_drift"}
+
+    settings = get_settings()
+    decision = request_retraining(
+        TriggerType.DRIFT,
+        reason=f"feature drift detected (psi={drift_result.get('psi')})",
+        details=drift_result,
+        producer=get_event_producer(),
+        ledger=RetrainingAuditLedger(settings.retraining_audit_path),
+        debounce=timedelta(hours=settings.retraining_debounce_hours),
+    )
+    return decision.model_dump(mode="json")
+
+
 with DAG(
     dag_id="drift_monitor",
     default_args=default_args,
@@ -49,10 +77,10 @@ with DAG(
         provide_context=True,
     )
 
-    alert_on_drift = BashOperator(
-        task_id="alert_on_drift",
-        bash_command='echo "Drift detected — retraining requested"',
-        trigger_rule="all_success",
+    request_retraining = PythonOperator(
+        task_id="request_retraining",
+        python_callable=request_retraining_on_drift,
+        provide_context=True,
     )
 
-    compute_drift >> alert_on_drift
+    compute_drift >> request_retraining
