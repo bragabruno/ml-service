@@ -1,56 +1,66 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+UV="uv"
+PYTHON=".venv/bin/python"
+
 echo "=== Fraud Prevention Platform — ml-service Demo ==="
 echo ""
 
 echo "1/6 Generating synthetic data..."
-python data/generate_synthetic.py --num-transactions 5000 --fraud-rate 0.05
+$PYTHON data/generate_synthetic.py --num-transactions 5000 --fraud-rate 0.05
 echo ""
 
 echo "2/6 Running dbt (seed + build + test)..."
-cd dbt
-dbt deps --target duckdb
-dbt seed --target duckdb
-dbt build --target duckdb
-dbt test --target duckdb
-cd ..
+(
+  cd dbt
+  $UV run dbt deps --target duckdb
+  $UV run dbt seed --target duckdb
+  $UV run dbt build --target duckdb
+  $UV run dbt test --target duckdb
+)
 echo ""
 
 echo "3/6 Checking feature parity..."
-python -m ml_service.features.parity
+$UV run python -m ml_service.features.parity
 echo ""
 
 echo "4/6 Training model..."
-python -m ml_service.training.train
+$UV run python -m ml_service.training.train
 echo ""
 
 echo "5/6 Starting FastAPI server..."
-uvicorn ml_service.app.main:app --host 0.0.0.0 --port 8000 &
+$UV run uvicorn ml_service.app.main:app --host 127.0.0.1 --port 8770 &
 SERVER_PID=$!
-sleep 3
+sleep 4
 
 echo "  Testing /health..."
-curl -s http://localhost:8000/health | python -m json.tool
+curl -s http://127.0.0.1:8770/health | python -m json.tool
 
 echo "  Testing /predict..."
-curl -s -X POST http://localhost:8000/api/v1/predict \
+curl -s -X POST http://127.0.0.1:8770/api/v1/predict \
   -H "Content-Type: application/json" \
   -d '{"transaction_id": "demo-001", "amount": 1500.00, "country": "NG", "new_device": true, "failed_attempts": 5}' \
   | python -m json.tool
 
 echo "  Testing /investigate..."
-curl -s -X POST http://localhost:8000/api/v1/investigate \
+curl -s -X POST http://127.0.0.1:8770/api/v1/investigate \
   -H "Content-Type: application/json" \
-  -d '{"transaction_id": "demo-001"}' \
+  -d '{"transaction_id": "demo-001", "amount": 1500.00, "country": "NG", "new_device": true, "failed_attempts": 5}' \
+  | python -m json.tool
+
+echo "  Testing /feedback..."
+curl -s -X POST http://127.0.0.1:8770/api/v1/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"transaction_id": "demo-001", "original_disposition": "REVIEW", "analyst_decision": "DECLINE", "feedback_type": "override", "notes": "Confirmed fraud"}' \
   | python -m json.tool
 
 kill $SERVER_PID 2>/dev/null || true
 echo ""
 
 echo "6/6 Running AI evaluation suite..."
-python -m eval.runner
-python -m eval.gate
+$UV run python -m eval.runner
+$UV run python -m eval.gate
 echo ""
 
 echo "=== Demo complete ==="
