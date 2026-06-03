@@ -16,8 +16,21 @@ default_args = {
 
 
 def check_drift(**kwargs):
-    drift_threshold = 0.2
-    return {"drift_detected": False, "psi": 0.05, "threshold": drift_threshold}
+    """Compute real feature-level PSI from the offline feature store.
+
+    Uses the older half of the training dataset as the reference distribution and
+    the recent half as the current window — a baseline-vs-recent comparison that is
+    offline-runnable against the duckdb mart (no live stream required).
+    """
+    from ml_service.drift.feature_drift import evaluate_drift
+    from ml_service.features.offline_store import get_offline_store
+
+    df = get_offline_store().get_training_dataset()
+    numeric = df.select_dtypes(include="number")
+    mid = len(numeric) // 2
+    reference = numeric.iloc[:mid].to_numpy()
+    current = numeric.iloc[mid:].to_numpy()
+    return evaluate_drift(reference, current, list(numeric.columns))
 
 
 with DAG(
