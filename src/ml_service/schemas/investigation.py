@@ -59,15 +59,12 @@ class JudgeVerdict(BaseModel):
     passed: bool
 
 
-class PredictRequest(BaseModel):
-    transaction_id: str
-    amount: float
-    new_device: bool = False
-    failed_attempts: int = 0
-    country: str = "US"
-    merchant_id: str | None = None
-    device_id: str | None = None
-    user_id: str | None = None
+class AgentTriage(BaseModel):
+    disposition: Decision
+    confidence: float = Field(ge=0.0, le=1.0)
+    summary: str
+    evidence: list[Evidence]
+    model: str | None = None
 
 
 class PredictResponse(BaseModel):
@@ -76,6 +73,33 @@ class PredictResponse(BaseModel):
     risk_level: str
     model_version: str
     contributing_factors: list[str]
+    agent_triage: AgentTriage | None = None
+
+
+class AnalystFeedback(BaseModel):
+    transaction_id: str
+    case_id: str | None = None
+    original_disposition: Decision
+    analyst_decision: Decision
+    feedback_type: str = "override"
+    notes: str | None = None
+
+
+class FeedbackResponse(BaseModel):
+    status: str
+    recorded: bool
+
+
+class PredictRequest(BaseModel):
+    transaction_id: str
+    amount: float
+    new_device: bool = False
+    failed_attempts: int = 0
+    country: str = "US"
+    currency: str = "USD"
+    merchant_id: str | None = None
+    device_id: str | None = None
+    user_id: str | None = None
 
 
 class InvestigateRequest(BaseModel):
