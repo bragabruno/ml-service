@@ -1,5 +1,13 @@
 .PHONY: help install dev test lint typecheck serve train dbt eval demo airflow generate parity clean
 
+# Doppler integration (consistent with root Makefile)
+DOPPLER := $(shell command -v doppler 2>/dev/null)
+ifdef DOPPLER
+  RUN := doppler run --
+else
+  RUN :=
+endif
+
 PYTHON = .venv/bin/python
 UV = uv
 
@@ -26,28 +34,28 @@ typecheck: ## Run mypy
 	$(UV) run mypy src/
 
 serve: ## Start the FastAPI server
-	$(UV) run uvicorn ml_service.app.main:app --host 0.0.0.0 --port 8000 --reload
+	$(RUN) $(UV) run uvicorn ml_service.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 generate: ## Generate synthetic data into DuckDB
-	$(PYTHON) data/generate_synthetic.py
+	$(RUN) $(PYTHON) data/generate_synthetic.py
 
 parity: ## Run train/serve feature parity check
-	$(UV) run python -m ml_service.features.parity
+	$(RUN) $(UV) run python -m ml_service.features.parity
 
 train: ## Run the training pipeline
-	$(UV) run python -m ml_service.training.train
+	$(RUN) $(UV) run python -m ml_service.training.train
 
 dbt: ## Run dbt seed + build + test (DuckDB target)
-	cd dbt && dbt seed --target duckdb && dbt build --target duckdb && dbt test --target duckdb
+	cd dbt && $(RUN) dbt seed --target duckdb && $(RUN) dbt build --target duckdb && $(RUN) dbt test --target duckdb
 
 eval: ## Run the AI evaluation suite
-	$(UV) run python -m eval.runner
+	$(RUN) $(UV) run python -m eval.runner
 
 demo: ## Run the full end-to-end demo
-	bash scripts/demo.sh
+	$(RUN) bash scripts/demo.sh
 
 airflow: ## Start Airflow standalone
-	airflow standalone
+	$(RUN) airflow standalone
 
 clean: ## Remove build artifacts and caches
 	rm -rf .mypy_cache .ruff_cache .pytest_cache htmlcov .coverage

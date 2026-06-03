@@ -91,6 +91,29 @@ make serve         # http://localhost:8000/docs
 make demo          # generate → dbt → train → serve → investigate → eval → report
 ```
 
+## Secrets Management (Doppler)
+
+All secrets are managed via [Doppler](https://www.doppler.com/) — never commit `.env` files with real credentials.
+
+```bash
+# 1. Install Doppler CLI
+brew install dopplerhq/tap/doppler
+
+# 2. Login
+doppler login
+
+# 3. Setup project (from repo root)
+doppler setup --project fraud-prevention --config dev_main
+
+# 4. Run with secrets injected
+make serve         # or: doppler run -- uvicorn ...
+```
+
+For Docker Compose (from repo root):
+```bash
+doppler run -- docker compose up -d
+```
+
 ---
 
 ## Repo Structure
