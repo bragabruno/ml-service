@@ -10,17 +10,17 @@ class Settings(BaseSettings):
 
     db_duckdb_path: str = "./data/fraud.duckdb"
     db_postgres_host: str = "localhost"
-    db_postgres_port: int = 5433
+    db_postgres_port: int = 5432
     db_postgres_db: str = "fraud_db"
     db_postgres_user: str = "fraud_user"
     db_postgres_password: str = "fraud_pass"
 
     redis_host: str = "localhost"
-    redis_port: int = 6380
+    redis_port: int = 6379
 
     mlflow_tracking_uri: str = "http://localhost:5001"
 
-    kafka_bootstrap_servers: str = "localhost:9093"
+    kafka_bootstrap_servers: str = "localhost:9092"
 
     service_host: str = "0.0.0.0"
     service_port: int = 8000
