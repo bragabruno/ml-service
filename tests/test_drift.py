@@ -4,6 +4,7 @@ import numpy as np
 
 from ml_service.drift.feature_drift import (
     compute_feature_drift,
+    evaluate_drift,
     ks_statistic,
     population_stability_index,
 )
@@ -39,6 +40,25 @@ def test_compute_feature_drift_flags_only_shifted_column() -> None:
     by_name = {d.feature: d for d in compute_feature_drift(ref, cur, ["a", "b", "c"])}
     assert not by_name["a"].drifted
     assert by_name["b"].drifted
+
+
+def test_evaluate_drift_flags_shifted_feature_with_computed_psi() -> None:
+    rng = np.random.default_rng(4)
+    ref = rng.normal(size=(500, 2))
+    cur = ref.copy()
+    cur[:, 0] += 4.0
+    verdict = evaluate_drift(ref, cur, ["amount", "velocity"])
+    assert verdict["drift_detected"] is True
+    assert verdict["drifted_features"] == ["amount"]
+    assert verdict["psi"] > verdict["threshold"]
+
+
+def test_evaluate_drift_no_drift_for_identical() -> None:
+    rng = np.random.default_rng(5)
+    ref = rng.normal(size=(500, 2))
+    verdict = evaluate_drift(ref, ref.copy(), ["amount", "velocity"])
+    assert verdict["drift_detected"] is False
+    assert verdict["drifted_features"] == []
 
 
 def test_prediction_drift_detects_score_shift() -> None:

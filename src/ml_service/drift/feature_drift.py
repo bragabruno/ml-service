@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -78,3 +79,29 @@ def compute_feature_drift(
             )
         )
     return results
+
+
+def evaluate_drift(
+    reference: np.ndarray,
+    current: np.ndarray,
+    feature_names: list[str],
+    *,
+    psi_threshold: float = 0.25,
+) -> dict[str, Any]:
+    """Aggregate per-feature drift into a single monitor verdict.
+
+    Returns the worst-case PSI, the list of drifted features, and an overall
+    ``drift_detected`` flag — the shape a monitoring/alerting task consumes.
+    """
+    results = compute_feature_drift(reference, current, feature_names, psi_threshold=psi_threshold)
+    drifted = [r.feature for r in results if r.drifted]
+    max_psi = max((r.psi for r in results), default=0.0)
+    return {
+        "drift_detected": bool(drifted),
+        "psi": max_psi,
+        "threshold": psi_threshold,
+        "drifted_features": drifted,
+        "per_feature": [
+            {"feature": r.feature, "psi": r.psi, "ks_statistic": r.ks_statistic, "drifted": r.drifted} for r in results
+        ],
+    }
