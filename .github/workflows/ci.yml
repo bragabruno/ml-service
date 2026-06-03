@@ -20,7 +20,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: Lint (ruff)
         run: |
@@ -47,7 +47,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --extra dbt --extra dev
+        run: uv sync --all-extras
 
       - name: Generate synthetic data
         run: uv run python data/generate_synthetic.py
@@ -78,7 +78,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: Feature parity check
         run: uv run python -m ml_service.features.parity
@@ -97,7 +97,10 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
+
+      - name: Generate synthetic data
+        run: uv run python data/generate_synthetic.py
 
       - name: Run eval suite + gate
         run: uv run python -m eval.gate
