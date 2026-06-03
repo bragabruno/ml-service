@@ -1,0 +1,30 @@
+# VCS / agent worktrees (the worktrees carry full .venv trees — never ship them)
+.git
+.gitignore
+.claude
+
+# Python virtualenvs and caches
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Build artifacts
+dist
+build
+*.egg-info
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
