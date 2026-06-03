@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from ml_service.app.observability import get_logger
+from ml_service.schemas.retraining import RetrainingRun
 from ml_service.serving.model_registry import get_registry
 from ml_service.serving.serving_model import get_serving_model
 
@@ -38,9 +39,14 @@ async def deploy_model(version: str) -> dict[str, str]:
         return {"status": "error", "detail": str(e)}
 
 
-@router.post("/retrain")
-async def retrain() -> dict[str, str]:
-    return {
-        "status": "triggered",
-        "note": "Training pipeline runs via Airflow DAG (FRAUD-177)",
-    }
+@router.post("/retrain", response_model=RetrainingRun)
+async def retrain() -> RetrainingRun:
+    """Trigger a tracked retraining run (train → evaluate → register candidate + promotion check).
+
+    Registers a candidate only; promotion to production stays a human action via
+    `POST /model/deploy/{version}` (FRAUD-117 / FRAUD-080).
+    """
+    from ml_service.retraining.orchestrator import run_retraining
+    from ml_service.schemas.retraining import TriggerType
+
+    return run_retraining(trigger=TriggerType.SCHEDULE, reason="manual /retrain")

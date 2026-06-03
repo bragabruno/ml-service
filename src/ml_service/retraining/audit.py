@@ -41,3 +41,21 @@ class RetrainingAuditLedger:
             if ts >= cutoff:
                 out.append(rec)
         return out
+
+
+class RunLedger:
+    """Append-only JSONL log of orchestrated retraining runs (observability for FRAUD-116)."""
+
+    def __init__(self, path: str | Path) -> None:
+        self._path = Path(path)
+
+    def append(self, record: dict[str, Any]) -> None:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        with self._path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record) + "\n")
+
+    def all(self) -> list[dict[str, Any]]:
+        if not self._path.exists():
+            return []
+        with self._path.open(encoding="utf-8") as fh:
+            return [json.loads(line) for line in fh if line.strip()]

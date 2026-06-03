@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     event_producer_provider: str = "mock"
     retraining_audit_path: str = "./data/retraining_audit.jsonl"
     retraining_debounce_hours: float = 24.0
+    # Retraining orchestration + promotion guardrails.
+    retraining_runs_path: str = "./data/retraining_runs.jsonl"
+    promotion_min_pr_auc_improvement: float = 0.0
 
     service_host: str = "0.0.0.0"
     service_port: int = 8000
