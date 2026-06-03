@@ -56,9 +56,9 @@ def configure_logging(log_level: str = "INFO") -> None:
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    logger = structlog.get_logger(name)
-    assert isinstance(logger, structlog.stdlib.BoundLogger)
-    return logger
+    from typing import cast
+
+    return cast("structlog.stdlib.BoundLogger", structlog.get_logger(name))
 
 
 class Timer:
