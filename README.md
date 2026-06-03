@@ -13,7 +13,7 @@ The AI/ML inference, training, drift detection, agentic investigation, and evalu
 ```mermaid
 flowchart TB
     subgraph ml["ml-service (Python / FastAPI)"]
-        api["/health · /predict · /batch-predict<br/>/model/version · /retrain · /investigate"]
+        api["/health · /predict · /batch-predict · /investigate<br/>/feedback · /events/review-required · /retrain · /model/*"]
         schema["Pydantic Schemas + Feature Contract"]
         serving["Model Serving (in-memory + atomic hot-swap)"]
         agent["Agentic Investigation Copilot"]
