@@ -37,6 +37,18 @@ MODEL_SWAPS = Counter(
     "Total model hot-swaps",
 )
 
+SHADOW_SCORE_DELTA = Histogram(
+    "fraud_shadow_score_delta",
+    "Absolute score delta between champion and shadow (challenger) models",
+    buckets=[0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0],
+)
+
+SHADOW_DECISION_AGREEMENT = Counter(
+    "fraud_shadow_decision_agreement_total",
+    "Champion vs shadow decision agreement on scored transactions",
+    ["agreement"],
+)
+
 
 def configure_logging(log_level: str = "INFO") -> None:
     structlog.configure(

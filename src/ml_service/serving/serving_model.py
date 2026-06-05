@@ -23,6 +23,7 @@ class LoadedModel:
 class ServingModel:
     def __init__(self) -> None:
         self._current: LoadedModel | None = None
+        self._shadow: LoadedModel | None = None
         self._lock = threading.RLock()
 
     @property
@@ -66,6 +67,40 @@ class ServingModel:
             old = self._current.version
             self._current = None
             return old
+
+    # ── Shadow (challenger) slot ──────────────────────────────────────────────
+    # A challenger scored alongside the champion for divergence telemetry. It NEVER
+    # affects predict()/predict_proba() — the champion alone serves real decisions.
+
+    @property
+    def is_shadow_loaded(self) -> bool:
+        with self._lock:
+            return self._shadow is not None
+
+    @property
+    def shadow_version(self) -> str:
+        with self._lock:
+            return self._shadow.version if self._shadow is not None else "none"
+
+    def load_shadow(self, model: Predictable, version: str, **kwargs: Any) -> None:
+        loaded = LoadedModel(model=model, version=version, **kwargs)
+        with self._lock:
+            self._shadow = loaded
+
+    def clear_shadow(self) -> str:
+        with self._lock:
+            if self._shadow is None:
+                return "none"
+            old = self._shadow.version
+            self._shadow = None
+            return old
+
+    def predict_shadow(self, features: np.ndarray) -> np.ndarray:
+        with self._lock:
+            if self._shadow is None:
+                raise RuntimeError("No shadow model loaded")
+            proba = self._shadow.model.predict_proba(features)
+        return proba[:, 1] if proba.ndim == 2 else proba
 
 
 _serving_model: ServingModel | None = None
