@@ -5,10 +5,12 @@ from fastapi import APIRouter, HTTPException
 
 from ml_service.agent.investigation_agent import investigate
 from ml_service.agent.llm.factory import get_llm_client
+from ml_service.app.config import get_settings
 from ml_service.app.observability import PREDICTION_COUNT, PREDICTION_LATENCY, SCORE_HISTOGRAM, Timer, get_logger
 from ml_service.features.transforms import compute_features, feature_importance_names
 from ml_service.schemas.investigation import AgentTriage, PredictRequest, PredictResponse
 from ml_service.serving.serving_model import get_serving_model
+from ml_service.serving.shadow import decision_for_score, record_shadow_comparison
 
 router = APIRouter()
 
@@ -35,17 +37,11 @@ async def predict(request: PredictRequest) -> PredictResponse:
     SCORE_HISTOGRAM.observe(score)
     PREDICTION_LATENCY.observe(timer.elapsed)
 
-    if score >= 0.7:
-        risk_level = "HIGH"
-        decision = "DECLINE"
-    elif score >= 0.4:
-        risk_level = "MEDIUM"
-        decision = "REVIEW"
-    else:
-        risk_level = "LOW"
-        decision = "APPROVE"
+    risk_level, decision = decision_for_score(score)
 
     PREDICTION_COUNT.labels(model_version=serving.version, decision=decision).inc()
+
+    _maybe_shadow_score(serving, X, request.transaction_id, score)
 
     top_indices = list(np.argsort(np.abs(features))[-5:][::-1])
     factors = feature_importance_names(top_indices) if serving.is_loaded else ["NONE"]
@@ -78,6 +74,30 @@ async def batch_predict(requests: list[PredictRequest]) -> list[PredictResponse]
     if len(requests) > 100:
         raise HTTPException(status_code=400, detail="Batch size exceeds maximum of 100")
     return [await predict(r) for r in requests]
+
+
+def _maybe_shadow_score(serving: object, X: np.ndarray, transaction_id: str, champion_score: float) -> None:
+    """Score the challenger alongside the champion for divergence telemetry.
+
+    Fully guarded: a broken/missing shadow model must never affect the /predict response or
+    availability — that is the defining property of shadow serving.
+    """
+    from ml_service.serving.serving_model import ServingModel
+
+    if not isinstance(serving, ServingModel) or not serving.is_shadow_loaded:
+        return
+    try:
+        shadow_score = float(serving.predict_shadow(X)[0])
+        record_shadow_comparison(
+            transaction_id,
+            champion_score,
+            shadow_score,
+            champion_version=serving.version,
+            shadow_version=serving.shadow_version,
+            path=get_settings().shadow_comparison_path,
+        )
+    except Exception as exc:  # noqa: BLE001 - shadow must never break /predict
+        logger.warning("shadow_score_failed", txn_id=transaction_id, error=str(exc))
 
 
 def _auto_investigate(request: PredictRequest, score: float) -> AgentTriage | None:

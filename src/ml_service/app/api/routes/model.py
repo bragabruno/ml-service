@@ -22,6 +22,7 @@ async def model_version() -> dict[str, Any]:
     return {
         "active_version": serving.version,
         "model_loaded": str(serving.is_loaded),
+        "shadow_version": serving.shadow_version,
         "available_versions": versions,
         "framework": "xgboost",
     }
@@ -37,6 +38,28 @@ async def deploy_model(version: str) -> dict[str, str]:
         return {"status": "deployed", "version": version, "previous": old}
     except FileNotFoundError as e:
         return {"status": "error", "detail": str(e)}
+
+
+@router.post("/model/shadow/{version}")
+async def load_shadow(version: str) -> dict[str, str]:
+    """Load a registered version into the challenger (shadow) slot — scored alongside the
+    champion on /predict for divergence telemetry; never affects responses."""
+    registry = get_registry()
+    serving = get_serving_model()
+    try:
+        model, metadata = registry.load(version)
+    except FileNotFoundError as e:
+        return {"status": "error", "detail": str(e)}
+    serving.load_shadow(model, version, metadata=metadata)
+    logger.info("shadow_loaded", version=version)
+    return {"status": "shadow_loaded", "version": version}
+
+
+@router.delete("/model/shadow")
+async def clear_shadow() -> dict[str, str]:
+    old = get_serving_model().clear_shadow()
+    logger.info("shadow_cleared", previous=old)
+    return {"status": "shadow_cleared", "previous": old}
 
 
 @router.post("/retrain", response_model=RetrainingRun)
